@@ -1,4 +1,4 @@
-import INFO from '../../../contants/playerInfo';
+import INFO from '../../../constants/playerInfo';
 // Maybe should map the other way around?
 // Have special functions for defining
 // Possibly move to a config file system

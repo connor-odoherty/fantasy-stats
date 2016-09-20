@@ -16,6 +16,6 @@ function transformData (player) {
   return _.omitBy( playerData, (v) => !v );
 }
 
-export default {
+export {
   transformData
 };

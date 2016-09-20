@@ -6,37 +6,38 @@ var React = require('react');
 var ReactDOM = require('react-dom/server');
 var Router = require('react-router');
 var routes = require('./app/routes');
+var mongoose = require('mongoose');
+var _ = require('lodash');
 
+// Request tools
+var async = require('async');
+var request = require('request');
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var config = require('./config');
 
-var mongoose = require('mongoose');
-
 // Fantasy Data tools
-var fantasyDataJSON = require('./app/fantasy-data/fantasy-data-adp.json');
-var helpersFD = require('./app/fantasy-data/fantasyDataHelpers');
+var fantasyDataJSON = require('./models/playerFD/fantasy-data-adp.json');
+var helpersFD = require('./models/playerFD/helpers');
 var PlayerFD = require('./models/playerFD');
 
 // Fantasy Football Nerds tools
-var ffnJSON = require('./app/fantasy-football-nerds/ffn-players.json');
-var helpersFFN = require('./app/fantasy-football-nerds/ffnHelpers');
+var ffnJSON = require('./models/playerFFN/ffn-players.json');
+var helpersFFN = require('./models/playerFFN/helpers');
 var PlayerFFN = require('./models/playerFFN');
-
-// Request parsing tools
-var async = require('async');
-var request = require('request');
-var xml2js = require('xml2js');
+var loadFFN = require('./models/playerFFN/load');
 
 // Helpers
 var mongoHelpers = require('./dataHelpers/mongoHelpers');
-mongoHelpers.printPropertyValues();
+// mongoHelpers.printPropertyValues();
 var dataHelpers = require('./dataHelpers/dataHelpers');
+var INFO = require('./constants/playerInfo');
 
-var _ = require('lodash');
-
+PlayerFFN.matchAttribute(INFO.NAME, 'Corey Coleman', function(err, player) {
+  console.log('PLAYER:', player)
+});
 var app = express();
 
 mongoose.connect(config.database);
@@ -81,24 +82,19 @@ app.get('/api/collect', function(req, res, next) {
       callback()
     }, function(err) {
       if (err) return err;
+      // TODO: Middleware showing discrephancies in information
       res.send('DONE');
     })
   });
 });
-
 
 /**
  * GET /fantasyDataAPI/load
  * Grab all fantasy players from Fantasy Data API and save by PlayerID
  *
  * TODO:
- * - Find a way to easily combine ADP and Player info
  * - Implement a 'check set' to make sure we have loaded all players
  * - Create middleware routing (check for team name existence, player existence, etc.)
- * use 'disctint' to get each value
- * BIG ISSUE:
- * JSON parse not working correctly
- * Could add Mongoose middleware
  */
 app.get('/fantasyDataAPI/load', function(req, res, next) {
   // var errorIDs = [];
@@ -122,6 +118,7 @@ app.get('/fantasyDataAPI/load', function(req, res, next) {
         })
       },
       function(playerJSON) {
+        // May want to make separate module
         var query = { playerId: player.PlayerID };
         var update = helpersFD.default.transformData(player, playerJSON);
         var options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -136,51 +133,18 @@ app.get('/fantasyDataAPI/load', function(req, res, next) {
     if (err) {
       return res.status(500).send({message: err});
     }
+    // Could add layer of data verification (clean update, no loss, logging, etc.)
     res.send('DONE');
   });
 });
 
 /**
- * GET /fantasyFootballNerdsAPI/load
+ * GET /ffnAPI/load
  * Grab all fantasy players from Fantasy Football Nerds API and save by PlayerID
  */
 app.get('/ffnAPI/load', function(req, res, next) {
-  async.forEach(ffnJSON.Players, function (player, callback) {
-    // Watch out for missmatching playerId vs PlayerID, should probably abstract to constant
-    var query = { playerId: player.playerId };
-    var update = helpersFFN.default.transformData(player);
-    var options = { upsert: true, new: true, setDefaultsOnInsert: true };
-
-    // Find the document, update if exists, add new if does not
-    PlayerFFN.findOneAndUpdate(query, update, options, function(err, result) {
-      if (err) {
-        callback(err);
-      } else {
-        callback();
-      }
-    });
-  }, function(err) {
-    if (err) {
-      return res.status(500).send({message: err});
-    }
-    res.send('DONE')
-  });
-});
-
-/*
- * POST /api/players
- * Collects and cleans player data from multiple APIs into central API
- *
- * TODO:
- * - Create process for matching names (possibly keep track in set)
- * - Process for combining multiple APIs
- * - Validation
- */
-app.post('/api/players', function(req, res, next) {
-  PlayerFD.find({}, function (err, players) {
-    if (err) return next(err);
-    console.log('PLAYERS:', players)
-    res.send('SUCCESS in combining players')
+  loadFFN.loadAPI(function(err) {
+    err ? res.status(500).send(err.message) : res.send('LOADED');
   });
 });
 

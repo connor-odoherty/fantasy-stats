@@ -1,7 +1,7 @@
-import INFO from '../../../contants/playerInfo';
-// Maybe should map the other way around?
-// Have special functions for defining
+import INFO from '../../../constants/playerInfo';
+// Middleware functions in Mongoose schema
 // Possibly move to a config file system
+// What to do about 1-to-many?
 
 export default {
   [INFO.FD_PLAYER_ID]: 'playerId',

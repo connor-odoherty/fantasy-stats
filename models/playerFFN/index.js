@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
+import INFO from './constants/info';
 
-// Do I pull in as is? Or transform as I pull?
+// TODO: Add middleware verifying that team and position match constants
+// TODO: Add middleware to transform data to meet generic definition
 
 var playerFFNSchema = new mongoose.Schema({
   playerId: { type: String, unique: true, index: true },
@@ -16,8 +18,11 @@ var playerFFNSchema = new mongoose.Schema({
   college: { type: String }
 });
 
-playerFFNSchema.methods.getAttribute = function(attribute, cb) {
-  return this.model('PlayerFNN').find({});
+playerFFNSchema.statics.matchAttribute = function(attribute, value, cb) {
+  return this.model('PlayerFFN').find({ [INFO[attribute]]: value });
 };
 
+playerFFNSchema.methods.getAttribute = function(document, attribute, cb) {
+  return this.model('PlayerFFN').find({ [INFO[attribute]]: 1 });
+}
 module.exports = mongoose.model('PlayerFFN', playerFFNSchema);

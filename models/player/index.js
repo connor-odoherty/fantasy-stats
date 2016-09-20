@@ -5,10 +5,9 @@ var mongoose = require('mongoose');
 // TODO: Decide explicit deifinition vs flexible stat logging 
 // TODO: Do I determine type here, or in the main collection?
 // TODO: Add createDate
-// Explain that casting should not be implicit
 // Discuss how to handle future updates
 // Maybe random ID gen upon having neither
-// Talk about how we don't really need to pull everything in each time
+// Will eventually not need to pull in all data every update
 
 var playerSchema = new mongoose.Schema({
   player_id: { type: String, unique: true, index: true },

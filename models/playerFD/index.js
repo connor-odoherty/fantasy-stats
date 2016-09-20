@@ -1,9 +1,9 @@
 var mongoose = require('mongoose');
-
-// Do I pull in as is? Or transform as I pull?
+import INFO from './constants/info';
 
 // TODO: Decide explicit deifinition vs flexible stat logging 
 // TODO: Do I determine type here, or in the main collection?
+// TODO: Add middleware to transform BirthDate to match format of DOB
 
 var playerFDSchema = new mongoose.Schema({
   PlayerId: { type: String, unique: true, index: true },
@@ -20,8 +20,12 @@ var playerFDSchema = new mongoose.Schema({
   Weight: { type: Number }
 });
 
-playerFDSchema.methods.getAttribute = function(attribute, cb) {
-  return this.model('PlayerFD').find({});
+playerFDSchema.methods.matchAttribute = function(attribute, value, cb) {
+  return this.model('PlayerFD').find({ [INFO[attribute]]: value });
 };
+
+playerFDSchema.methods.getAttribute = function(document, attribute, cb) {
+  return this.model('PlayerFD').find({ [INFO[attribute]]: 1 });
+}
 
 module.exports = mongoose.model('PlayerFD', playerFDSchema);

@@ -1,6 +1,5 @@
 import alt from '../alt';
 import NavbarActions from '../actions/NavbarActions';
-import helpers from '../fantasy-data/fantasyDataHelpers';
 
 class NavbarStore {
   constructor() {

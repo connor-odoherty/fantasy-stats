@@ -1,4 +1,4 @@
-import INFO from '../../../contants/playerInfo';
+import INFO from '../../../constants/playerInfo';
 
 export default {
   [INFO.FFN_PLAYER_ID]: 'playerId',

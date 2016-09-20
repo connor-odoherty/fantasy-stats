@@ -1,13 +1,7 @@
 var mongoose = require('mongoose');
 
 // Fantasy Data tools
-var fantasyDataJSON = require('../app/fantasy-data/fantasy-data-adp.json');
-var helpersFD = require('../app/fantasy-data/fantasyDataHelpers');
 var PlayerFD = require('../models/playerFD');
-
-// Fantasy Football Nerds tools
-var ffnJSON = require('../app/fantasy-football-nerds/ffn-players.json');
-var helpersFFN = require('../app/fantasy-football-nerds/ffnHelpers');
 var PlayerFFN = require('../models/playerFFN');
 
 // REFACTOR TO ABSTRACT!!!!
