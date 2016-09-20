@@ -16,5 +16,8 @@ var playerFFNSchema = new mongoose.Schema({
   college: { type: String }
 });
 
-module.exports = mongoose.model('PlayerFFN', playerFFNSchema);
+playerFFNSchema.methods.getAttribute = function(attribute, cb) {
+  return this.model('PlayerFNN').find({});
+};
 
+module.exports = mongoose.model('PlayerFFN', playerFFNSchema);

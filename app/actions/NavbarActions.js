@@ -59,8 +59,7 @@ class NavbarActions {
 
   loadCollect() {
     $.ajax({
-      url: '/api/players',
-      type: 'POST'
+      url: '/api/collect',
     })
       .done((data) => {
         console.log("Player Collect Success", data)

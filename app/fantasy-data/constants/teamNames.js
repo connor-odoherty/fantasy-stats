@@ -30,6 +30,5 @@ export default {
   SEA: 'SEA',
   PHI: 'PHI',
   LA:  'LA',
-  CHI: 'CHI',
-  FA:  'FA' 
+  CHI: 'CHI'
 }

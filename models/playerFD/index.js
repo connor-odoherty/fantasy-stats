@@ -20,8 +20,8 @@ var playerFDSchema = new mongoose.Schema({
   Weight: { type: Number }
 });
 
+playerFDSchema.methods.getAttribute = function(attribute, cb) {
+  return this.model('PlayerFD').find({});
+};
+
 module.exports = mongoose.model('PlayerFD', playerFDSchema);
-
-
-
-

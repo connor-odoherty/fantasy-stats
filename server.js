@@ -32,7 +32,8 @@ var xml2js = require('xml2js');
 
 // Helpers
 var mongoHelpers = require('./dataHelpers/mongoHelpers');
-
+mongoHelpers.printPropertyValues();
+var dataHelpers = require('./dataHelpers/dataHelpers');
 
 var _ = require('lodash');
 
@@ -51,7 +52,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const FD_HEADER = { 'Ocp-Apim-Subscription-Key': 'ac747c39e87f405c8eefd6139343acef' };
 
-
 /**
  * GET /api/players/search
  * Return info on a player
@@ -68,6 +68,24 @@ app.get('/fantasyDataAPI/players/search', function(req, res, next) {
   });
 });
 
+/*
+ * GET /api/collect
+ * Combines data from multiple sources into central DB
+ * Really would like to abstract eventually
+ * Don't want this coupled to specific properties
+ */
+app.get('/api/collect', function(req, res, next) {
+  PlayerFD.find({}, function(err, documents) {
+    async.forEach(documents, function(player, callback){
+      var playerFFN = dataHelpers.findPlayerMatch(player);
+      callback()
+    }, function(err) {
+      if (err) return err;
+      res.send('DONE');
+    })
+  });
+});
+
 
 /**
  * GET /fantasyDataAPI/load
@@ -80,9 +98,10 @@ app.get('/fantasyDataAPI/players/search', function(req, res, next) {
  * use 'disctint' to get each value
  * BIG ISSUE:
  * JSON parse not working correctly
+ * Could add Mongoose middleware
  */
 app.get('/fantasyDataAPI/load', function(req, res, next) {
-  var errorIDs = [];
+  // var errorIDs = [];
   async.forEach(fantasyDataJSON, function (player, callback) {
     async.waterfall([
       function(callback) {
@@ -105,7 +124,6 @@ app.get('/fantasyDataAPI/load', function(req, res, next) {
       function(playerJSON) {
         var query = { playerId: player.PlayerID };
         var update = helpersFD.default.transformData(player, playerJSON);
-        console.log('update:', update)
         var options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
         // Find the document, update if exists, add new if does not
@@ -183,11 +201,38 @@ app.use(function(req, res) {
   });
 });
 
-/**
- * Socket.io stuff.
- */
 var server = require('http').createServer(app);
 
 server.listen(app.get('port'), function() {
   console.log('Express server listening on port ' + app.get('port'));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 });

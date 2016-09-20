@@ -11,7 +11,7 @@ function getPropertyValues(collectionName, property) {
     var collection = db.collection(collectionName, function(err, collection) {
       if (err) console.log('Collection invalid:', err);
       collection.distinct(property, function(err, entries) {
-        err ? console.log('Property invalid:', err) : console.log(collectionName, property, entries);
+        err ? console.log('Property invalid:', err) : console.log(collectionName, property, entries.sort());
       });
     });
   });
@@ -20,8 +20,8 @@ function getPropertyValues(collectionName, property) {
 function printPropertyValues() {
   getPropertyValues('playerffns', 'team');
   getPropertyValues('playerffns', 'position');
-  getPropertyValues('playerfds', 'team');
-  getPropertyValues('playerfds', 'position');
+  getPropertyValues('playerfds', 'Team');
+  getPropertyValues('playerfds', 'Position');
 }
 
 export {
