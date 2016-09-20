@@ -1,18 +1,20 @@
 var mongoose = require('mongoose');
 import INFO from './constants/info';
+import INFO_CONST from '../../constants/playerInfo';
+var async = require('async');
 
 // TODO: Decide explicit deifinition vs flexible stat logging 
 // TODO: Do I determine type here, or in the main collection?
 // TODO: Add middleware to transform BirthDate to match format of DOB
 
 var playerFDSchema = new mongoose.Schema({
-  PlayerId: { type: String, unique: true, index: true },
+  playerId: { type: String, unique: true, index: true },
   Name: { type: String },
   AverageDraftPositionPPR: { type: Number },
   FirstName: { type: String },
   LastName: { type: String },
   Position: { type: String },
-  Team: { type: String },
+  Team: { type: String, default: 'FA' },
   Number: { type: Number },
   ByeWeek: { type: Number },
   BirthDate: { type: String },
@@ -20,12 +22,29 @@ var playerFDSchema = new mongoose.Schema({
   Weight: { type: Number }
 });
 
-playerFDSchema.methods.matchAttribute = function(attribute, value, cb) {
-  return this.model('PlayerFD').find({ [INFO[attribute]]: value });
+playerFDSchema.statics.matchAttribute = function(attribute, value, callback) {
+  this.findOne({ [INFO[attribute]]: value }, function(err, player) {
+    callback(err, player);
+  });
 };
 
-playerFDSchema.methods.getAttribute = function(document, attribute, cb) {
-  return this.model('PlayerFD').find({ [INFO[attribute]]: 1 });
+// Add extra error handling here
+playerFDSchema.methods.getAttribute = function(attribute, callback) {
+  return this.model('PlayerFD').findOne({Name: this.Name}, function(err, value){
+    callback(err, value.toObject()[INFO[attribute]]);
+  });
+}
+
+playerFDSchema.methods.getAttributes = function(attributes, callback) {
+  return this.model('PlayerFD').findOne({Name: this.Name}, function(err, value){
+    var atts = {};
+    async.forEach(attributes, function(attribute, callback) {
+      atts[attribute] = value.toObject()[INFO[attribute]];
+      callback()
+    }, function(err) {
+      callback(err, atts);
+    });
+  });
 }
 
 module.exports = mongoose.model('PlayerFD', playerFDSchema);

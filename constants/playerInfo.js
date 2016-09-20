@@ -1,10 +1,12 @@
 import keyMirror from 'keymirror';
 
-export default keyMirror({
+module.exports = keyMirror({
   PLAYER_ID: null,
   FD_PLAYER_ID: null,
   FFN_PLAYER_ID: null,
   NAME: null,
+  LAST_NAME: null,
+  FIRST_NAME: null,
   NUMBER: null,
   POS: null,
   TEAM: null,

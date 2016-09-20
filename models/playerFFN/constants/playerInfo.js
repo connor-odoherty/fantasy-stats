@@ -1,6 +1,6 @@
 import info from '../../../constants/playerInfo';
 
-export default {
+module.exports = {
   playerId: info.FFN_PLAYER_ID,
   active: null,
   jersey: info.NUMBER,

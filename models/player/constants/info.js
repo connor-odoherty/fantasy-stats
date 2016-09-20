@@ -1,7 +1,7 @@
 // might consider extracting out meta data
-import INFO from './playerData';
+import INFO from '../../../constants/playerInfo';
 
-export default {
+module.exports = {
   [INFO.PLAYER_ID]:     'player_id',
   [INFO.FD_PLAYER_ID]:  'fd_player_id',
   [INFO.FFN_PLAYER_ID]: 'ffn_player_id',
@@ -11,7 +11,7 @@ export default {
   [INFO.TEAM]:          'team',
   [INFO.HEIGHT]:        'height',
   [INFO.WEIGHT]:        'weight',
-  [INFO.DOB]:           'dob'
+  [INFO.DOB]:           'dob',
   [INFO.SCHOOL]:        'school',
   [INFO.ADP]:           'adp',
   [INFO.BYE]:           'bye'

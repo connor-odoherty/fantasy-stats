@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   ATL: 'ATL',
   CAR: 'CAR',
   PIT: 'PIT',

@@ -3,7 +3,7 @@ import INFO from '../../../constants/playerInfo';
 // Have special functions for defining
 // Possibly move to a config file system
 
-export default {
+module.exports = {
   playerId: INFO.FD_PLAYER_ID,
   Name: INFO.NAME,
   AverageDraftPositionPPR: INFO.ADP,

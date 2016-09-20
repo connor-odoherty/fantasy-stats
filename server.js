@@ -34,16 +34,36 @@ var mongoHelpers = require('./dataHelpers/mongoHelpers');
 // mongoHelpers.printPropertyValues();
 var dataHelpers = require('./dataHelpers/dataHelpers');
 var INFO = require('./constants/playerInfo');
-
-PlayerFFN.matchAttribute(INFO.NAME, 'Corey Coleman', function(err, player) {
-  console.log('PLAYER:', player)
-});
 var app = express();
 
 mongoose.connect(config.database);
 mongoose.connection.on('error', function() {
   console.info('I see you forgot to run mongod again...');
 });
+
+PlayerFD.matchAttribute(INFO.NAME, 'Corey Coleman', function(err, player) {
+  player.getAttributes([INFO.NAME, INFO.NUMBER, INFO.DOB], function(err, value) {
+    console.log("VALUE CALLBACK:", value)
+  });
+});
+
+var infoConvert = require('./models/playerFD/constants/info');
+var infoMain = require('./models/player/constants/info');
+var obj = {
+  playerId: '12109',
+  Weight: 180,
+  Height: '5\'11"',
+  BirthDate: '1985-04-12T00:00:00',
+  Number: 19,
+  LastName: 'Ginn',
+  FirstName: 'Ted',
+  ByeWeek: 7,
+  Position: 'WR',
+  AverageDraftPositionPPR: 211.9,
+  Name: 'Ted Ginn',
+  __v: 0,
+  Team: 'CAR' };
+console.log('CONVERT:', dataHelpers.convertFromTo(infoConvert, infoMain, obj))
 
 app.set('port', process.env.PORT || 3000);
 app.use(logger('dev'));
@@ -74,12 +94,22 @@ app.get('/fantasyDataAPI/players/search', function(req, res, next) {
  * Combines data from multiple sources into central DB
  * Really would like to abstract eventually
  * Don't want this coupled to specific properties
+ * Could easily abstract to take in list of DBs
  */
 app.get('/api/collect', function(req, res, next) {
-  PlayerFD.find({}, function(err, documents) {
-    async.forEach(documents, function(player, callback){
-      var playerFFN = dataHelpers.findPlayerMatch(player);
-      callback()
+  PlayerFD.find({}, function(err, collection) {
+    async.forEach(collection.slice(1,100), function(player, callback){
+      PlayerFFN.findMatch(player, function(err, playerMatch) {
+        if (playerMatch) {
+          playerMatch.convertToMain(function(err, pFFN) {
+            console.log('PLAYER CONVERT:', pFFN);
+            callback();
+          });
+        } else {
+          callback(null)
+        }
+        // Do I want services to convert themselves?
+      });
     }, function(err) {
       if (err) return err;
       // TODO: Middleware showing discrephancies in information
@@ -95,6 +125,7 @@ app.get('/api/collect', function(req, res, next) {
  * TODO:
  * - Implement a 'check set' to make sure we have loaded all players
  * - Create middleware routing (check for team name existence, player existence, etc.)
+ * - Ability to turn logging on and off
  */
 app.get('/fantasyDataAPI/load', function(req, res, next) {
   // var errorIDs = [];
@@ -125,7 +156,12 @@ app.get('/fantasyDataAPI/load', function(req, res, next) {
 
         // Find the document, update if exists, add new if does not
         PlayerFD.findOneAndUpdate(query, update, options, function(err, result) {
-          err ? callback(err) : callback();
+          if (err) {
+            console.log('error player:', query);
+            callback(err);
+          } else {
+            callback();
+          }
         });
       }
     ]);

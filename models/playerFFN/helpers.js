@@ -6,6 +6,8 @@ function transformData (player) {
     active: !!parseInt(player.active),
     jersey: parseInt(player.jersey),
     displayName: player.displayName,
+    lname: player.lname,
+    fname: player.fname,
     position: player.position,
     team: player.team,
     height: player.height,

@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   QB: 'QB',
   RB: 'RB',
   WR: 'WR',
