@@ -1,21 +1,21 @@
-import React from 'react';
-import { Link } from 'react-router';
-import SearchBarStore from '../stores/SearchBarStore';
-import SearchBarActions from '../actions/SearchBarActions';
+ import React from 'react';
+import {Link} from 'react-router';
+import NavbarStore from '../stores/NavbarStore';
+import NavbarActions from '../actions/NavbarActions';
 
-class SearchBar extends React.Component {
+class Navbar extends React.Component {
   constructor(props) {
     super(props);
-    this.state = SearchBarStore.getState();
+    this.state = NavbarStore.getState();
     this.onChange = this.onChange.bind(this);
   }
 
   componentDidMount() {
-    SearchBarStore.listen(this.onChange);
+    NavbarStore.listen(this.onChange);
   }
 
   componentWillUnmount() {
-    SearchBarStore.unlisten(this.onChange);
+    NavbarStore.unlisten(this.onChange);
   }
 
   onChange(state) {
@@ -28,7 +28,7 @@ class SearchBar extends React.Component {
     let searchQuery = this.state.searchQuery.trim();
 
     if (searchQuery) {
-      SearchBarActions.findPlayer({
+      NavbarActions.findPlayer({
         searchQuery: searchQuery,
         searchForm: this.refs.searchForm,
         history: this.props.history
@@ -36,30 +36,75 @@ class SearchBar extends React.Component {
     }
   }
 
+  handleFindPlayer() {
+    const player = 'Corey Coleman';
+    NavbarActions.findPlayer(player);
+  }
+
+  handleLoadFD() {
+    NavbarActions.loadFantasyDataADP();
+  }
+
+  handleLoadFFN() {
+    NavbarActions.loadFFNPlayers();
+  }
+
+  handleCollect() {
+    NavbarActions.loadCollect();
+  }
+
   render() {
+    //console.log("State:", this.state)
     return (
-      <nav className='search-bar search-bar-default search-bar-static-top'>
-        <div className='search-bar-header'>
-          <button type='button' className='search-bar-toggle collapsed' data-toggle='collapse' data-target='#search-bar'>
+      <nav className='navbar navbar-default navbar-static-top'>
+        <div className='navbar-header'>
+          <button type='button' className='navbar-toggle collapsed' data-toggle='collapse' data-target='#navbar'>
             <span className='sr-only'>Toggle navigation</span>
             <span className='icon-bar'></span>
             <span className='icon-bar'></span>
             <span className='icon-bar'></span>
           </button>
+          <Link to='/' className='navbar-brand'>
+            FANTASY STATS
+            <span className='badge badge-up badge-danger'>{this.state.onlineUsers}</span>
+          </Link>
         </div>
-        <div id='search-bar' className='search-bar-collapse collapse'>
-          <form ref='searchForm' className='search-bar-form search-bar-left animated' onSubmit={this.handleSubmit.bind(this)}>
+        <div id='navbar' className='navbar-collapse collapse'>
+          <form ref='searchForm' className='navbar-form navbar-left animated' onSubmit={this.handleSubmit.bind(this)}>
             <div className='input-group'>
-              <input type='text' className='form-control' value={this.state.searchQuery} onChange={search-barActions.updateSearchQuery} />
+              <input type='text' className='form-control' placeholder={'search'} value={this.state.searchQuery} onChange={NavbarActions.updateSearchQuery} />
               <span className='input-group-btn'>
-                <button className='btn btn-default' onClick={this.handleSubmit.bind(this)}><span className='glyphicon glyphicon-search'></span></button>
+                <button className='btn btn-default' onClick={ this.handleFindPlayer.bind(this) }><span className='glyphicon glyphicon-search'></span></button>
+              </span>
+              <span className='input-group-btn'>
+                <button className='btn btn-default' onClick={ this.handleLoadFD.bind(this) }><span>LOAD FD</span></button>
+              </span>
+              <span className='input-group-btn'>
+                <button className='btn btn-default' onClick={ this.handleLoadFFN.bind(this) }><span>LOAD FFN</span></button>
+              </span>
+              <span className='input-group-btn'>
+                <button className='btn btn-default' onClick={ this.handleCollect.bind(this) }><span>COLLECT</span></button>
               </span>
             </div>
           </form>
+          <ul className='nav navbar-nav'>
+            <li><Link to='/'>Home</Link></li>
+            <li><Link to='/stats'>Stats</Link></li>
+            <li className='dropdown'>
+              <a href='#' className='dropdown-toggle' data-toggle='dropdown'>Top 10 <span className='caret'></span></a>
+              <ul className='dropdown-menu'>
+                <li><Link to='/top'>Top Overall</Link></li>
+                <li><Link to='/top/QB'>QB</Link></li>
+                <li><Link to='/top/RB'>RB</Link></li>
+                <li><Link to='/top/WR'>WR</Link></li>
+                <li><Link to='/top/TE'>TE</Link></li>
+              </ul>
+            </li>
+          </ul>
         </div>
       </nav>
     );
   }
 }
 
-export default SearchBar;
+export default Navbar;

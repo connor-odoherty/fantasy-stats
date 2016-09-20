@@ -1,11 +1,11 @@
 import React from 'react';
-import SearchBar from './SearchBar';
+import Navbar from './Navbar';
 
 class App extends React.Component {
   render() {
     return (
       <div>
-        <SearchBar />
+        <Navbar history={ this.props.history }/>
         {this.props.children}
       </div>
     );
