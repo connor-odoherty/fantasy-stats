@@ -1,6 +1,6 @@
 import keyMirror from 'keymirror';
 
-export default keyMirror({
+module.exports = keyMirror({
   ATL: null,
   CAR: null,
   PIT: null,

@@ -18,59 +18,34 @@ var logger = require('morgan');
 var bodyParser = require('body-parser');
 var config = require('./config');
 
-// Fantasy Data tools
-var fantasyDataJSON = require('./models/playerFD/fantasy-data-adp.json');
+// Models
+var Player = require('./models/player');
 var helpersFD = require('./models/playerFD/helpers');
 var PlayerFD = require('./models/playerFD');
+var fantasyDataJSON = require('./models/playerFD/fantasy-data-adp.json');
 
 // Fantasy Football Nerds tools
-var ffnJSON = require('./models/playerFFN/ffn-players.json');
-var helpersFFN = require('./models/playerFFN/helpers');
 var PlayerFFN = require('./models/playerFFN');
 var loadFFN = require('./models/playerFFN/load');
 
-// Helpers
-var mongoHelpers = require('./dataHelpers/mongoHelpers');
-// mongoHelpers.printPropertyValues();
-var dataHelpers = require('./dataHelpers/dataHelpers');
 var INFO = require('./constants/playerInfo');
+
 var app = express();
 
+// Connect to MongoDB instance using Mongoose
 mongoose.connect(config.database);
 mongoose.connection.on('error', function() {
   console.info('I see you forgot to run mongod again...');
 });
 
-PlayerFD.matchAttribute(INFO.NAME, 'Corey Coleman', function(err, player) {
-  player.getAttributes([INFO.NAME, INFO.NUMBER, INFO.DOB], function(err, value) {
-    console.log("VALUE CALLBACK:", value)
-  });
-});
-
-var infoConvert = require('./models/playerFD/constants/info');
-var infoMain = require('./models/player/constants/info');
-var obj = {
-  playerId: '12109',
-  Weight: 180,
-  Height: '5\'11"',
-  BirthDate: '1985-04-12T00:00:00',
-  Number: 19,
-  LastName: 'Ginn',
-  FirstName: 'Ted',
-  ByeWeek: 7,
-  Position: 'WR',
-  AverageDraftPositionPPR: 211.9,
-  Name: 'Ted Ginn',
-  __v: 0,
-  Team: 'CAR' };
-console.log('CONVERT:', dataHelpers.convertFromTo(infoConvert, infoMain, obj))
-
+// Configure app tools
 app.set('port', process.env.PORT || 3000);
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Move to individual service
 const FD_HEADER = { 'Ocp-Apim-Subscription-Key': 'ac747c39e87f405c8eefd6139343acef' };
 
 /**
@@ -78,7 +53,6 @@ const FD_HEADER = { 'Ocp-Apim-Subscription-Key': 'ac747c39e87f405c8eefd6139343ac
  * Return info on a player
  */
 app.get('/fantasyDataAPI/players/search', function(req, res, next) {
-
   var playerIdLookupUrl = 'https://api.fantasydata.net/v3/nfl/stats/JSON/Player/' + req.playerId;
   request.get({
     url: playerIdLookupUrl, 
@@ -97,23 +71,40 @@ app.get('/fantasyDataAPI/players/search', function(req, res, next) {
  * Could easily abstract to take in list of DBs
  */
 app.get('/api/collect', function(req, res, next) {
-  PlayerFD.find({}, function(err, collection) {
-    async.forEach(collection.slice(1,100), function(player, callback){
+  var playerFD, playerFFN;
+  PlayerFD.find({}, function(err, collection) {  
+    // Iterate through each player in the FD collection
+    async.forEach(collection.slice(1,5), function(player, callback) {  
       PlayerFFN.findMatch(player, function(err, playerMatch) {
-        if (playerMatch) {
-          playerMatch.convertToMain(function(err, pFFN) {
-            console.log('PLAYER CONVERT:', pFFN);
-            callback();
+        // Get the 'scrubbed' version of each API data 
+        // TODO: Make this a more generic iteration of servcies
+        async.parallel([
+          function(callback) {
+            if (playerMatch) {
+              playerMatch.convertToMain(function(err, pFFN) {
+                callback(err, pFFN);
+              });  
+            } else {
+              callback()            
+            }
+          },
+          function(callback) {
+            player.convertToMain(function(err, pFD) {
+              callback(err, pFD);
+            });
+          }
+        ], function(err, results) {
+          playerFD = results[1];
+          playerFFN = results[0];
+          Player.combineAndUpdate(playerFD, playerFFN, function(err, result) {
+            callback(err, result);
           });
-        } else {
-          callback(null)
-        }
-        // Do I want services to convert themselves?
+        })
       });
-    }, function(err) {
+    }, function(err, result) {
       if (err) return err;
       // TODO: Middleware showing discrephancies in information
-      res.send('DONE');
+      res.send(result);
     })
   });
 });
@@ -149,15 +140,16 @@ app.get('/fantasyDataAPI/load', function(req, res, next) {
         })
       },
       function(playerJSON) {
-        // May want to make separate module
+        // May want to make separate module for re-use
         var query = { playerId: player.PlayerID };
         var update = helpersFD.default.transformData(player, playerJSON);
         var options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
         // Find the document, update if exists, add new if does not
+        // TODO: consider db check middleware
         PlayerFD.findOneAndUpdate(query, update, options, function(err, result) {
           if (err) {
-            console.log('error player:', query);
+            console.log('Error updating::', query);
             callback(err);
           } else {
             callback();

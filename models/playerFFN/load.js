@@ -9,7 +9,6 @@ exports.loadAPI  = function(callback) {
     var query = { playerId: player.playerId };
     var update = helpers.transformData(player);
     var options = { upsert: true, new: true, setDefaultsOnInsert: true };
-    console.log('PLAYER:', player)
 
     // Find the document, update if exists, add new if does not
     PlayerFFN.findOneAndUpdate(query, update, options, function(err, result) {

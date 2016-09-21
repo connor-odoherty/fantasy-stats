@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
-var INFO = require('./constants/info');
-var INFO_MAIN = require('../player/constants/info');
+import INFO from './constants/info';
+import INFO_MAIN from '../player/constants/info';
 var PLAYER = require('../../constants/playerInfo');
 var dataHelpers = require('../../dataHelpers/dataHelpers');
 // TODO: Add middleware verifying that team and position match constants
@@ -37,7 +37,8 @@ playerFFNSchema.methods.getAttribute = function(attribute, callback) {
 
 playerFFNSchema.methods.convertToMain = function(callback) {
   return this.model('PlayerFFN').findOne({playerId: this.playerId}, function(err, value) {
-    callback(err, dataHelpers.convertFromTo(INFO, INFO_MAIN, value.toObject()));
+    if (err) return callback(err);
+    callback(err,  dataHelpers.convertFromTo(INFO, INFO_MAIN, value.toObject()));
   });
 }
 
@@ -47,15 +48,15 @@ playerFFNSchema.statics.findMatch = function(playerToMatch, callback) {
   var self = this;
   playerToMatch.getAttribute(PLAYER.NAME, function(err, name) {
     self.findOne({ [INFO[PLAYER.NAME]]: name }, function(err, player) {
+      if (err) return callback(err);
       if (player) {
         callback(err, player)
       } else {
         playerToMatch.getAttributes([PLAYER.LAST_NAME, PLAYER.TEAM, PLAYER.POS], function(err, atts) {
           var query = dataHelpers.convert(INFO, atts);
-          console.log("QUERY FOR:", query)
           self.findOne(query, function(err, player2) {
+            if (err) return callback(err);
             if (player2) {
-              console.log('GOT ON SECOND PASS:', player2, playerToMatch)
               callback(player2)
             } else {
               console.log('COULD NOT FIND MATCH FOR:', playerToMatch)

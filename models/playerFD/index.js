@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
-import INFO from './constants/info';
-import INFO_CONST from '../../constants/playerInfo';
+var INFO = require('./constants/info');
+var INFO_MAIN = require('../player/constants/info');
+var PLAYER = require('../../constants/playerInfo');
+var dataHelpers = require('../../dataHelpers/dataHelpers');
 var async = require('async');
 
 // TODO: Decide explicit deifinition vs flexible stat logging 
@@ -22,19 +24,41 @@ var playerFDSchema = new mongoose.Schema({
   Weight: { type: Number }
 });
 
+/* matchAttribute
+ *
+ * Finds a player matching the value of a abstracted attribute
+ */
 playerFDSchema.statics.matchAttribute = function(attribute, value, callback) {
   this.findOne({ [INFO[attribute]]: value }, function(err, player) {
     callback(err, player);
   });
 };
 
-// Add extra error handling here
+/* getAttribute
+ *
+ * Gets attribute from a document using the abstracted constant
+ */
 playerFDSchema.methods.getAttribute = function(attribute, callback) {
   return this.model('PlayerFD').findOne({Name: this.Name}, function(err, value){
     callback(err, value.toObject()[INFO[attribute]]);
   });
 }
 
+/* convertToMain
+ * 
+ * Uses the main db's data schema to transform own documents
+ */
+playerFDSchema.methods.convertToMain = function(callback) {
+  return this.model('PlayerFD').findOne({Name: this.Name}, function(err, value) {
+    callback(err,  dataHelpers.convertFromTo(INFO, INFO_MAIN, value.toObject()));
+  });
+}
+
+/* getAttributes
+ *
+ * Params: list of generic attributes
+ * Returns: Obj contianing abstracted attributes
+ */
 playerFDSchema.methods.getAttributes = function(attributes, callback) {
   return this.model('PlayerFD').findOne({Name: this.Name}, function(err, value){
     var atts = {};

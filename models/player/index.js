@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var _ = require('lodash');
 
 // Do I pull in as is? Or transform as I pull?
 
@@ -24,5 +25,28 @@ var playerSchema = new mongoose.Schema({
   weight: { type: Number },
   bye: { type: Number }
 });
+
+/* combineAndUpdate
+ *
+ * Defines logic for taking in multiple data sources and merging them
+ * into a single collection
+ *
+ * TODO: Take in list and define priorities through config
+ */
+playerSchema.statics.combineAndUpdate = function(pFD, pFFN, callback) {
+  var cleanFD = _.omitBy( pFD, (v) => !v );
+  var cleanFFN = _.omitBy( pFFN, (v) => !v );
+  var query = { player_id: pFD.player_id };
+  var update = _.assign({}, cleanFFN, cleanFD);
+  var options = { upsert: true, new: true, setDefaultsOnInsert: true };
+  this.findOneAndUpdate(query, update, options, function(err, result) {
+    if (err) {
+      console.log('Unable to update player:', query);
+      callback(err);
+    } else {
+      callback(err, result);
+    }
+  });
+};
 
 module.exports = mongoose.model('Player', playerSchema);
